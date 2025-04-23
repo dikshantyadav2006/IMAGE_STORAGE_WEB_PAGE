@@ -22,7 +22,8 @@ const server = http.createServer(app);
 
 // CORS allowed origins
 const allowedOrigins = [
-  "http://localhost:5173", // local dev
+  process.env.FRONTEND_URL_LOCAL, // local dev
+  process.env.FRONTEND_URL, // production
 ];
 
 // Setup Socket.IO
