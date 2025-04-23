@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+*{padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+
+:root {
+  --dark-color: #121315;
+  --light-color: #EEF4F4;
+
+  /*  */
+  --primary-dark-color: #232427;
+  --primary-light-color: #bbc5c5;
+
+  /*  */
+  --secondary-dark-color: #3a3b3d;
+  --secondary-light-color: #909595;
+
+  /*  */
+  --tertiary-dark-color:#151416;
+  --tertiary-light-color:#FAF0F1;
+
+}
+
+
+
+html, body{
+  width: 100%;
+  
+}
+
+.no-scroll {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
+/* ======================================================= */
+
+* {
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Hides scrollbar */
+}
