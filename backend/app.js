@@ -22,7 +22,8 @@ const server = http.createServer(app);
 
 // CORS allowed origins
 const allowedOrigins = [
-  "https://image-storage-web-page.vercel.app/" // production
+ process.env.FRONTEND_URL, // production
+  process.env.FRONTEND_URL_LOCAL
 ];
 
 // Setup Socket.IO
