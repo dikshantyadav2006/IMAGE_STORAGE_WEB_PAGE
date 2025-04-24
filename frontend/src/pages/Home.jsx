@@ -3,6 +3,7 @@ import ImageGallery from '../components/gallery/ImageGallery';
 import BackendUnavailable from '../components/common/BackendUnavailable';
 import { useAuth } from '../context/authContext/AuthContext';
 import { usePosts } from '../context/postContext/PostContext';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -31,18 +32,18 @@ const Home = () => {
 
         {!isAuthenticated && (
           <div className="mt-6 text-center">
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="inline-block px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 mr-4"
             >
               Log In
-            </a>
-            <a
-              href="/signup"
+            </Link>
+            <Link
+              to="/signup"
               className="inline-block px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600"
             >
               Sign Up
-            </a>
+            </Link>
           </div>
         )}
       </div>
