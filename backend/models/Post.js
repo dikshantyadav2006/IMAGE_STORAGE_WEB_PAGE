@@ -5,7 +5,12 @@ const postSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false, // Allow null for anonymous posts
+    },
+    anonymousUsername: {
+      type: String,
+      trim: true,
+      default: null, // For anonymous posts from Android
     },
     caption: {
       type: String,

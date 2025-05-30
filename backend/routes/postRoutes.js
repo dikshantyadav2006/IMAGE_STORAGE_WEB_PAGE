@@ -14,8 +14,67 @@ const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+// Create a new post with image
+
+router.post(
+  "/upload",
+  upload.single("image"),
+  async (req, res) => {
+    console.log("Upload request received:", req.file);
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "Please upload an image" });
+      }
+      const caption = 'onecaption';
+      const tags = 'onetag';
+      const isPrivate = false;
+      const userId = '680a12dd7b701aa0965d2518';
+
+      // Upload image to Cloudinary
+      const { url, cloudinaryId } = await uploadImage(req.file.path);
+
+      // Create new post
+      const newPost = new Post({
+        user: userId,
+        caption,
+        imageUrl: url,
+        cloudinaryId,
+        tags: tags ? tags.split(",").map((tag) => tag.trim()) : [],
+        isPrivate: isPrivate === "true",
+      });
+      console.log("New post created:", newPost);
+
+      // Save post
+      await newPost.save();
+
+      // Update user's posts array and totalPosts count
+      await User.findByIdAndUpdate(userId, {
+        $push: { posts: newPost._id },
+        $inc: { totalPosts: 1 },
+      });
+
+      // Notify followers if using Socket.io
+      if (req.io) {
+        req.io.emit("newPost", {
+          postId: newPost._id,
+          userId,
+          imageUrl: url,
+        });
+      }
+
+      res.status(201).json({
+        message: "Post created successfully",
+        post: newPost,
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(500).json({ message: "Failed to create post", error: error.message });
+    }
+  }
+);
 
 // Create a new post with image
+
 router.post(
   "/create",
   verifyUser,
@@ -395,6 +454,189 @@ router.get("/search", async (req, res) => {
   } catch (error) {
     console.error("Error searching posts:", error);
     res.status(500).json({ message: "Failed to search posts", error: error.message });
+  }
+});
+
+// ==================== ANDROID SPECIFIC ROUTES ====================
+
+// Upload image without authentication (for Android)
+router.post(
+  "/upload-anonymous",
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Please upload an image",
+          success: false,
+          code: "NO_IMAGE"
+        });
+      }
+
+      const { caption, tags, username } = req.body;
+
+      // Upload image to Cloudinary
+      const { url, cloudinaryId } = await uploadImage(req.file.path);
+
+      // Create anonymous post (without user association)
+      const newPost = new Post({
+        user: null, // No user association
+        caption: caption || "Uploaded from Android",
+        imageUrl: url,
+        cloudinaryId,
+        tags: tags ? tags.split(",").map((tag) => tag.trim()) : ["android"],
+        isPrivate: false, // Always public for anonymous posts
+        anonymousUsername: username || "Anonymous User"
+      });
+
+      // Save post
+      await newPost.save();
+
+      res.status(201).json({
+        message: "Image uploaded successfully",
+        success: true,
+        data: {
+          postId: newPost._id,
+          imageUrl: url,
+          caption: newPost.caption,
+          tags: newPost.tags,
+          anonymousUsername: newPost.anonymousUsername,
+          createdAt: newPost.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      res.status(500).json({
+        message: "Failed to upload image",
+        error: error.message,
+        success: false,
+        code: "SERVER_ERROR"
+      });
+    }
+  }
+);
+
+// Android-specific upload with user authentication
+router.post(
+  "/android-upload",
+  verifyUser,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Please upload an image",
+          success: false,
+          code: "NO_IMAGE"
+        });
+      }
+
+      const { caption, tags, isPrivate } = req.body;
+      const userId = req.user.id;
+
+      // Upload image to Cloudinary
+      const { url, cloudinaryId } = await uploadImage(req.file.path);
+
+      // Create new post
+      const newPost = new Post({
+        user: userId,
+        caption: caption || "",
+        imageUrl: url,
+        cloudinaryId,
+        tags: tags ? (Array.isArray(tags) ? tags : tags.split(",").map((tag) => tag.trim())) : [],
+        isPrivate: isPrivate === "true" || isPrivate === true,
+      });
+
+      // Save post
+      await newPost.save();
+
+      // Update user's posts array and totalPosts count
+      await User.findByIdAndUpdate(userId, {
+        $push: { posts: newPost._id },
+        $inc: { totalPosts: 1 },
+      });
+
+      // Return Android-friendly response
+      res.status(201).json({
+        message: "Post created successfully",
+        success: true,
+        data: {
+          postId: newPost._id,
+          imageUrl: url,
+          caption: newPost.caption,
+          tags: newPost.tags,
+          isPrivate: newPost.isPrivate,
+          createdAt: newPost.createdAt,
+          user: {
+            id: userId,
+            username: req.user.username || "User"
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(500).json({
+        message: "Failed to create post",
+        error: error.message,
+        success: false,
+        code: "SERVER_ERROR"
+      });
+    }
+  }
+);
+
+// Get posts for Android (simplified response)
+router.get("/android-posts", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find({ isPrivate: false })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user", "username profilePic")
+      .lean();
+
+    // Format response for Android
+    const formattedPosts = posts.map(post => ({
+      id: post._id,
+      imageUrl: post.imageUrl,
+      caption: post.caption,
+      tags: post.tags,
+      likes: post.likes ? post.likes.length : 0,
+      comments: post.comments ? post.comments.length : 0,
+      createdAt: post.createdAt,
+      user: post.user ? {
+        id: post.user._id,
+        username: post.user.username,
+        profilePic: post.user.profilePic
+      } : {
+        username: post.anonymousUsername || "Anonymous User"
+      }
+    }));
+
+    const totalPosts = await Post.countDocuments({ isPrivate: false });
+
+    res.json({
+      success: true,
+      data: formattedPosts,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalPosts / limit),
+        totalPosts,
+        hasMore: page < Math.ceil(totalPosts / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching posts for Android:", error);
+    res.status(500).json({
+      message: "Failed to fetch posts",
+      error: error.message,
+      success: false,
+      code: "SERVER_ERROR"
+    });
   }
 });
 
