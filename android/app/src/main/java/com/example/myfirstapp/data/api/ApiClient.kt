@@ -20,8 +20,7 @@ import java.util.concurrent.TimeUnit
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 object ApiClient {
-    private const val BASE_URL = "http://10.0.2.2:5000/" // Android emulator localhost
-    // For physical device, replace with your computer's IP: "http://192.168.1.XXX:5000/"
+    private const val BASE_URL = "https://image-storage-web-page.onrender.com/" // Deployed backend on Render
 
     private val TOKEN_KEY = stringPreferencesKey("auth_token")
 

@@ -47,30 +47,20 @@ adb install android/app/build/outputs/apk/debug/app-debug.apk
 
 ## ⚙️ Pre-Installation Setup
 
-### 1. Backend Server
-Before using the app, ensure your backend server is running:
+### 1. Backend Server ✅ Ready!
+The app is configured to use your deployed backend on Render:
+- **URL**: `https://image-storage-web-page.onrender.com`
+- **Status**: ✅ No setup required!
+- **Security**: Uses HTTPS for secure communication
 
-```bash
-# In your backend directory
-npm start
-# Server should be running on http://localhost:5000
-```
+### 2. Network Configuration ✅ Done!
+The app is pre-configured and ready to use:
+- ✅ **Works on Emulator**: No configuration needed
+- ✅ **Works on Physical Device**: No IP setup required
+- ✅ **HTTPS Enabled**: Secure communication
+- ✅ **Cross-Platform**: Works anywhere with internet
 
-### 2. Network Configuration
-Update the server URL in the app if needed:
-- **For Emulator**: `http://10.0.2.2:5000/`
-- **For Physical Device**: `http://YOUR_COMPUTER_IP:5000/`
-
-To find your computer's IP:
-```bash
-# Windows
-ipconfig
-# Look for IPv4 Address
-
-# Mac/Linux
-ifconfig
-# Look for inet address
-```
+**No manual configuration needed!** The app will automatically connect to your Render backend.
 
 ## 📋 App Features
 
@@ -105,11 +95,11 @@ ifconfig
 - **Upload fails**: Check internet connection and file size
 
 ### Network Issues
-- **Can't connect to server**: 
-  - Ensure backend is running
-  - Check firewall settings
-  - Verify IP address in app configuration
-  - For physical device, ensure same WiFi network
+- **Can't connect to server**:
+  - Check internet connection
+  - Verify Render backend is online: https://image-storage-web-page.onrender.com
+  - Wait a moment if Render service is starting up (cold start)
+  - Check if device has HTTPS/SSL support enabled
 
 ## 📱 Device Requirements
 
@@ -135,7 +125,7 @@ The app requires these permissions:
 ## 🚀 First Launch
 
 1. **Open App**: Tap the "Image Gallery" icon
-2. **Authentication**: 
+2. **Authentication**:
    - Sign up for new account, or
    - Login with existing credentials, or
    - Use anonymous upload

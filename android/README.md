@@ -88,13 +88,15 @@ android/app/src/main/java/com/example/myfirstapp/
 ## Setup Instructions
 
 ### 1. Backend Configuration
-Update the base URL in `ApiClient.kt`:
+The app is configured to use the deployed backend on Render:
 ```kotlin
-private const val BASE_URL = "http://YOUR_SERVER_IP:5000/"
+private const val BASE_URL = "https://image-storage-web-page.onrender.com/"
 ```
 
-For Android emulator: `http://10.0.2.2:5000/`
-For physical device: `http://192.168.1.XXX:5000/`
+✅ **Ready to use** - No configuration needed!
+- Uses HTTPS for secure communication
+- Works on both emulator and physical devices
+- No need to update IP addresses
 
 ### 2. Dependencies
 All required dependencies are already configured in `build.gradle.kts`:

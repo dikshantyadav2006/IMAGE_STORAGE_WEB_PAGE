@@ -61,6 +61,20 @@ data class PostsResponse(
     val success: Boolean = true
 )
 
+// Alternative response format for some endpoints
+data class AndroidPostsResponse(
+    val success: Boolean,
+    val data: List<Post>,
+    val pagination: PaginationInfo
+)
+
+data class PaginationInfo(
+    val currentPage: Int,
+    val totalPages: Int,
+    val totalPosts: Int,
+    val hasMore: Boolean
+)
+
 data class AnonymousPostRequest(
     val caption: String? = null,
     val tags: String? = null,
