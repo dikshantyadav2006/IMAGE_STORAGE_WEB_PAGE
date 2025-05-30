@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -29,17 +30,16 @@ fun ProfileScreen(
 ) {
     val authUiState by authViewModel.uiState.collectAsStateWithLifecycle()
     val postUiState by postViewModel.uiState.collectAsStateWithLifecycle()
-    
+
     val currentUser = authUiState.currentUser
-    
+
     // Load user posts when screen is displayed
     LaunchedEffect(currentUser?.id) {
-        currentUser?.id?.let { userId ->
-            // You would need to implement getUserPosts in PostViewModel
-            // postViewModel.loadUserPosts(userId)
+        if (currentUser != null) {
+            postViewModel.loadCurrentUserPosts()
         }
     }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -72,16 +72,16 @@ fun ProfileScreen(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // User Info
                 Text(
                     text = currentUser?.username ?: "User",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 if (currentUser?.firstName != null && currentUser.lastName != null) {
                     Text(
                         text = "${currentUser.firstName} ${currentUser.lastName}",
@@ -89,9 +89,9 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Stats Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -112,9 +112,9 @@ fun ProfileScreen(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Posts Section
         Text(
             text = "My Posts",
@@ -122,8 +122,16 @@ fun ProfileScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        
-        if (postUiState.posts.isEmpty()) {
+
+        if (postUiState.isLoadingUserPosts) {
+            // Loading state
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (postUiState.userPosts.isEmpty()) {
             // Empty state
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -153,20 +161,31 @@ fun ProfileScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalItemSpacing = 8.dp
             ) {
-                items(postUiState.posts.filter { it.user?.id == currentUser?.id }) { post ->
+                items(postUiState.userPosts) { post ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Image(
-                            painter = rememberAsyncImagePainter(post.imageUrl),
-                            contentDescription = post.caption,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(150.dp),
-                            contentScale = ContentScale.Crop
-                        )
+                        Column {
+                            Image(
+                                painter = rememberAsyncImagePainter(post.imageUrl),
+                                contentDescription = post.caption,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                            if (post.caption.isNotBlank()) {
+                                Text(
+                                    text = post.caption,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(8.dp),
+                                    maxLines = 2,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
                 }
             }

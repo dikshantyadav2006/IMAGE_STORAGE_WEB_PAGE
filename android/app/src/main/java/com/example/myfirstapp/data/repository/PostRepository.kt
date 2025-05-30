@@ -15,14 +15,14 @@ import java.io.FileOutputStream
 import java.io.InputStream
 
 class PostRepository {
-    
+
     private val apiService = ApiClient.apiService
-    
+
     suspend fun getPosts(page: Int = 1, limit: Int = 12): Result<PostsResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getPosts(page, limit)
-                
+
                 if (response.isSuccessful) {
                     val postsResponse = response.body()
                     if (postsResponse != null) {
@@ -39,12 +39,12 @@ class PostRepository {
             }
         }
     }
-    
+
     suspend fun getUserPosts(userId: String, page: Int = 1, limit: Int = 12): Result<PostsResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.getUserPosts(userId, page, limit)
-                
+
                 if (response.isSuccessful) {
                     val postsResponse = response.body()
                     if (postsResponse != null) {
@@ -61,7 +61,29 @@ class PostRepository {
             }
         }
     }
-    
+
+    suspend fun getCurrentUserPosts(page: Int = 1, limit: Int = 12): Result<PostsResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getCurrentUserPosts(page, limit)
+
+                if (response.isSuccessful) {
+                    val postsResponse = response.body()
+                    if (postsResponse != null) {
+                        Result.success(postsResponse)
+                    } else {
+                        Result.failure(Exception("No posts data received"))
+                    }
+                } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Failed to fetch current user posts"
+                    Result.failure(Exception(errorMessage))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
     suspend fun createPost(
         context: Context,
         imageFile: File,
@@ -73,13 +95,13 @@ class PostRepository {
             try {
                 val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
                 val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
-                
+
                 val captionBody = caption.toRequestBody("text/plain".toMediaTypeOrNull())
                 val tagsBody = tags.toRequestBody("text/plain".toMediaTypeOrNull())
                 val isPrivateBody = isPrivate.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-                
+
                 val response = apiService.createPost(imagePart, captionBody, tagsBody, isPrivateBody)
-                
+
                 if (response.isSuccessful) {
                     val postResponse = response.body()
                     if (postResponse != null) {
@@ -96,7 +118,7 @@ class PostRepository {
             }
         }
     }
-    
+
     suspend fun createAnonymousPost(
         context: Context,
         imageFile: File,
@@ -108,13 +130,13 @@ class PostRepository {
             try {
                 val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
                 val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
-                
+
                 val captionBody = caption?.toRequestBody("text/plain".toMediaTypeOrNull())
                 val tagsBody = tags?.toRequestBody("text/plain".toMediaTypeOrNull())
                 val usernameBody = username?.toRequestBody("text/plain".toMediaTypeOrNull())
-                
+
                 val response = apiService.createAnonymousPost(imagePart, captionBody, tagsBody, usernameBody)
-                
+
                 if (response.isSuccessful) {
                     val postResponse = response.body()
                     if (postResponse != null) {
@@ -131,12 +153,12 @@ class PostRepository {
             }
         }
     }
-    
+
     suspend fun deletePost(postId: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.deletePost(postId)
-                
+
                 if (response.isSuccessful) {
                     Result.success(true)
                 } else {
@@ -148,14 +170,14 @@ class PostRepository {
             }
         }
     }
-    
+
     // Helper function to copy URI content to a file
     suspend fun copyUriToFile(context: Context, uri: Uri): File? {
         return withContext(Dispatchers.IO) {
             try {
                 val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
                 val tempFile = File(context.getExternalFilesDir(null), "temp_image_${System.currentTimeMillis()}.jpg")
-                
+
                 inputStream?.use { input ->
                     FileOutputStream(tempFile).use { output ->
                         input.copyTo(output)

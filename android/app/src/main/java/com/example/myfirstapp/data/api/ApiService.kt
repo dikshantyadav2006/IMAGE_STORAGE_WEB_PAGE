@@ -35,6 +35,12 @@ interface ApiService {
         @Query("limit") limit: Int = 12
     ): Response<PostsResponse>
 
+    @GET("posts/my-posts")
+    suspend fun getCurrentUserPosts(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 12
+    ): Response<PostsResponse>
+
     @Multipart
     @POST("posts/android-upload")
     suspend fun createPost(

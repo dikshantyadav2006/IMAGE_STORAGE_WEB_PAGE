@@ -218,6 +218,35 @@ router.get("/user/:userId",verifyUser, async (req, res) => {
   }
 });
 
+// Get current user's posts (for Android profile screen)
+router.get("/my-posts", verifyUser, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+    const userId = req.user.id;
+
+    const posts = await Post.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user", "username profilePic")
+      .lean();
+
+    const totalPosts = await Post.countDocuments({ user: userId });
+
+    res.json({
+      posts,
+      totalPages: Math.ceil(totalPosts / limit),
+      currentPage: page,
+      success: true
+    });
+  } catch (error) {
+    console.error("Error fetching user's posts:", error);
+    res.status(500).json({ message: "Failed to fetch user's posts", error: error.message });
+  }
+});
+
 // Update a post
 router.put("/:id", verifyUser, async (req, res) => {
   try {
